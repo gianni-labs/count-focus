@@ -1,0 +1,17 @@
+# Binaries and build outputs
+/countdown-focus
+/test-countdown
+*.test
+*.out
+
+# Coverage
+coverage.out
+coverage.html
+
+# OS/editor
+.DS_Store
+.idea/
+.vscode/
+
+# Logs
+*.log
