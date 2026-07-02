@@ -19,7 +19,9 @@ type confettiTickMsg time.Time
 type model struct {
 	total         time.Duration
 	remaining     time.Duration
-	startedAt     time.Time
+	elapsed       time.Duration
+	runningSince  time.Time
+	paused        bool
 	done          bool
 	confettiFrame int
 	width         int
@@ -56,6 +58,11 @@ var (
 			Foreground(lipgloss.Color("244")).
 			Align(lipgloss.Center)
 
+	progressBarStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color("212")).
+				Align(lipgloss.Center).
+				MarginBottom(1)
+
 	confettiStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("229")).
 			Align(lipgloss.Center).
@@ -77,9 +84,9 @@ func RunCountdown(duration time.Duration) error {
 
 func newModel(duration time.Duration) model {
 	return model{
-		total:     duration,
-		remaining: duration,
-		startedAt: time.Now(),
+		total:        duration,
+		remaining:    duration,
+		runningSince: time.Now(),
 	}
 }
 
@@ -93,6 +100,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "q", "esc", "ctrl+c":
 			return m, tea.Quit
+		case " ":
+			return m.togglePause()
 		}
 
 	case tea.WindowSizeMsg:
@@ -101,11 +110,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case tickMsg:
-		if m.done {
-			return m, confettiTick()
+		if m.done || m.paused {
+			if m.done {
+				return m, confettiTick()
+			}
+			return m, nil
 		}
 
-		remaining := m.total - time.Since(m.startedAt)
+		remaining := m.total - m.elapsed - time.Since(m.runningSince)
 		if remaining <= 0 {
 			m.remaining = 0
 			m.done = true
@@ -125,6 +137,24 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+// togglePause pauses/resumes the countdown, preserving the exact remaining
+// time across the transition instead of relying on a fixed startedAt.
+func (m model) togglePause() (tea.Model, tea.Cmd) {
+	if m.done {
+		return m, nil
+	}
+
+	if m.paused {
+		m.paused = false
+		m.runningSince = time.Now()
+		return m, countdownTick()
+	}
+
+	m.elapsed += time.Since(m.runningSince)
+	m.paused = true
+	return m, nil
+}
+
 func (m model) View() string {
 	if m.done {
 		return m.placeContent(strings.Join([]string{
@@ -135,11 +165,45 @@ func (m model) View() string {
 	}
 
 	remaining := FormatRemaining(m.remaining)
-	return m.placeContent(strings.Join([]string{
+	lines := []string{
 		titleStyle.Render("COUNT FOCUS"),
 		m.renderTime(remaining),
-		helpStyle.Render("Press q, Esc or Ctrl+C to quit"),
-	}, "\n"))
+	}
+
+	if m.canShowProgressBar() {
+		lines = append(lines, progressBarStyle.Render(renderProgressBar(m.progressBarWidth(), m.progress())))
+	}
+
+	lines = append(lines, helpStyle.Render(m.helpText()))
+
+	return m.placeContent(strings.Join(lines, "\n"))
+}
+
+func (m model) helpText() string {
+	if m.paused {
+		return "Paused — press Space to resume, q/Esc/Ctrl+C to quit"
+	}
+	return "Press Space to pause, q/Esc/Ctrl+C to quit"
+}
+
+// progress returns how much of the countdown has elapsed, in [0, 1].
+func (m model) progress() float64 {
+	if m.total <= 0 {
+		return 1
+	}
+	return float64(m.total-m.remaining) / float64(m.total)
+}
+
+func (m model) canShowProgressBar() bool {
+	return m.width >= progressBarMinWidth+16
+}
+
+func (m model) progressBarWidth() int {
+	width := m.width - 16
+	if width > progressBarMaxWidth {
+		width = progressBarMaxWidth
+	}
+	return width
 }
 
 func (m model) renderTime(remaining string) string {

@@ -15,6 +15,7 @@ Examples:
   count-focus 1h30m10s
 
 Keys:
+  Space            Pause/Resume
   q, Esc, Ctrl+C   Quit
 `
 
