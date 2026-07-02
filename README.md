@@ -8,6 +8,7 @@ Con Homebrew:
 
 ```bash
 brew tap gianni-labs/tap
+brew trust --formula gianni-labs/tap/count-focus
 brew install count-focus
 ```
 
