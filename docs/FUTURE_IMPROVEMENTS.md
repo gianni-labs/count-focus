@@ -25,7 +25,9 @@ Mejoras futuras posibles sobre este punto:
 
 ### 2. Tiempo con letras grandes estilo letrero
 
-Mostrar el tiempo restante con números grandes, tipo cartel o letrero de terminal.
+Estado: primera versión implementada como parte del ajuste responsive.
+
+Mostrar el tiempo restante con números grandes, tipo cartel o letrero de terminal, cuando el tamaño de la terminal lo permite. Si la terminal es pequeña, vuelve automáticamente al formato simple `MM:SS` / `HH:MM:SS`.
 
 Objetivo:
 
@@ -46,9 +48,9 @@ Ejemplo aproximado:
 
 Notas técnicas:
 
-- Se puede implementar una fuente propia simple para dígitos `0-9` y `:`.
-- Otra opción es usar una librería de ASCII art, pero para mantener el proyecto simple conviene empezar con una fuente propia pequeña.
-- Debe integrarse con el layout responsive para no romper terminales pequeñas.
+- Se implementó una fuente propia simple para dígitos `0-9` y `:`.
+- El render grande se activa solo si hay suficiente ancho y alto.
+- Debe seguir refinándose visualmente en futuras iteraciones.
 
 ## Prioridad Media
 
@@ -178,8 +180,8 @@ Objetivo:
 
 ## Orden recomendado de implementación
 
-1. Layout responsive / ajuste a pantalla.
-2. Letras grandes estilo letrero para el tiempo.
+1. Layout responsive / ajuste a pantalla. Implementado.
+2. Letras grandes estilo letrero para el tiempo. Primera versión implementada.
 3. Barra de progreso.
 4. Pausar y reanudar.
 5. Título personalizado.
@@ -193,7 +195,6 @@ Objetivo:
 
 La siguiente mejora debería ser combinar:
 
-1. Captura de tamaño de terminal con `tea.WindowSizeMsg`.
-2. Centrado real con `lipgloss.Place`.
-3. Render del tiempo en letras grandes si hay espacio suficiente.
-4. Fallback al formato simple `MM:SS` / `HH:MM:SS` en terminales pequeñas.
+1. Refinar la fuente grande del tiempo para que se vea más como un letrero.
+2. Agregar barra de progreso responsive.
+3. Ocultar o simplificar elementos secundarios en terminales pequeñas.

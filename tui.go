@@ -39,6 +39,13 @@ var (
 			MarginTop(1).
 			MarginBottom(1)
 
+	largeTimeStyle = lipgloss.NewStyle().
+			Bold(true).
+			Foreground(lipgloss.Color("212")).
+			Align(lipgloss.Center).
+			MarginTop(1).
+			MarginBottom(1)
+
 	doneStyle = lipgloss.NewStyle().
 			Bold(true).
 			Foreground(lipgloss.Color("42")).
@@ -127,11 +134,28 @@ func (m model) View() string {
 		}, "\n\n"))
 	}
 
+	remaining := FormatRemaining(m.remaining)
 	return m.placeContent(strings.Join([]string{
 		titleStyle.Render("COUNTDOWN"),
-		timeStyle.Render(FormatRemaining(m.remaining)),
+		m.renderTime(remaining),
 		helpStyle.Render("Press q, Esc or Ctrl+C to quit"),
 	}, "\n"))
+}
+
+func (m model) renderTime(remaining string) string {
+	if m.canUseLargeTime(remaining) {
+		return largeTimeStyle.Render(renderLargeTime(remaining))
+	}
+
+	return timeStyle.Render(remaining)
+}
+
+func (m model) canUseLargeTime(remaining string) bool {
+	if m.width <= 0 || m.height <= 0 {
+		return false
+	}
+
+	return m.width >= largeTimeWidth(remaining)+4 && m.height >= 12
 }
 
 func countdownTick() tea.Cmd {
