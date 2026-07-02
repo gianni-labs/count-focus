@@ -1,4 +1,4 @@
-module countdown
+module github.com/gianni-labs/count-focus
 
 go 1.22
 

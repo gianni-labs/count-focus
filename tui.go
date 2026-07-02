@@ -136,7 +136,7 @@ func (m model) View() string {
 
 	remaining := FormatRemaining(m.remaining)
 	return m.placeContent(strings.Join([]string{
-		titleStyle.Render("COUNTDOWN"),
+		titleStyle.Render("COUNT FOCUS"),
 		m.renderTime(remaining),
 		helpStyle.Render("Press q, Esc or Ctrl+C to quit"),
 	}, "\n"))
@@ -155,7 +155,7 @@ func (m model) canUseLargeTime(remaining string) bool {
 		return false
 	}
 
-	return m.width >= largeTimeWidth(remaining)+4 && m.height >= 12
+	return m.width >= largeTimeWidth(remaining)+4 && m.height >= largeTimeGlyphHeight+7
 }
 
 func countdownTick() tea.Cmd {

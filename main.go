@@ -6,13 +6,13 @@ import (
 )
 
 const helpText = `Usage:
-  countdown <duration>
+  count-focus <duration>
 
 Examples:
-  countdown 10s
-  countdown 5m
-  countdown 1h30m
-  countdown 1h30m10s
+  count-focus 10s
+  count-focus 5m
+  count-focus 1h30m
+  count-focus 1h30m10s
 
 Keys:
   q, Esc, Ctrl+C   Quit

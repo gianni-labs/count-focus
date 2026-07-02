@@ -1,6 +1,28 @@
 # Mejoras Futuras
 
-Este documento lista mejoras posibles después del MVP, con una breve explicación y prioridad sugerida.
+Este documento lista mejoras posibles después del MVP, con una breve explicación, prioridad sugerida y estado.
+
+## Resumen de estado
+
+| # | Mejora | Prioridad | Estado |
+|---|--------|-----------|--------|
+| 1 | Layout responsive / ajuste a pantalla | Alta | Implementado |
+| 2 | Tiempo con letras grandes estilo letrero | Alta | Implementado base |
+| 3 | Barra de progreso | Media | Pendiente |
+| 4 | Pausar y reanudar | Media | Pendiente |
+| 5 | Título personalizado | Media | Pendiente |
+| 6 | Presets | Media | Pendiente |
+| 7 | Modo count-up | Baja | Pendiente |
+| 8 | Sonido o notificación al terminar | Baja | Pendiente |
+| 9 | Temas visuales | Baja | Pendiente |
+| 10 | Más efectos finales | Baja | Pendiente |
+
+Estados posibles:
+
+- `Pendiente`: todavía no implementado.
+- `En progreso`: implementación iniciada pero no cerrada.
+- `Implementado base`: existe una primera versión funcional, pero puede refinarse.
+- `Implementado`: completo para el alcance definido.
 
 ## Prioridad Alta
 
@@ -25,9 +47,11 @@ Mejoras futuras posibles sobre este punto:
 
 ### 2. Tiempo con letras grandes estilo letrero
 
-Estado: primera versión implementada como parte del ajuste responsive.
+Estado: implementado base.
 
 Mostrar el tiempo restante con números grandes, tipo cartel o letrero de terminal, cuando el tamaño de la terminal lo permite. Si la terminal es pequeña, vuelve automáticamente al formato simple `MM:SS` / `HH:MM:SS`.
+
+Esta primera versión usa una fuente tipo banner basada en caracteres de bloque y esquinas. Más adelante se podrá convertir en un set configurable de fuentes visuales.
 
 Objetivo:
 
@@ -48,9 +72,9 @@ Ejemplo aproximado:
 
 Notas técnicas:
 
-- Se implementó una fuente propia simple para dígitos `0-9` y `:`.
+- Se implementó una fuente propia tipo banner para dígitos `0-9` y `:`.
 - El render grande se activa solo si hay suficiente ancho y alto.
-- Debe seguir refinándose visualmente en futuras iteraciones.
+- Más adelante se podrá agregar un set configurable de fuentes.
 
 ## Prioridad Media
 
@@ -180,9 +204,9 @@ Objetivo:
 
 ## Orden recomendado de implementación
 
-1. Layout responsive / ajuste a pantalla. Implementado.
-2. Letras grandes estilo letrero para el tiempo. Primera versión implementada.
-3. Barra de progreso.
+1. Layout responsive / ajuste a pantalla. Estado: Implementado.
+2. Letras grandes estilo letrero para el tiempo. Estado: Implementado base.
+3. Barra de progreso. Estado: Pendiente.
 4. Pausar y reanudar.
 5. Título personalizado.
 6. Presets.
