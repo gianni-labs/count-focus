@@ -22,35 +22,37 @@ type model struct {
 	startedAt     time.Time
 	done          bool
 	confettiFrame int
+	width         int
+	height        int
 }
 
 var (
 	titleStyle = lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("63")).
-		Align(lipgloss.Center)
+			Bold(true).
+			Foreground(lipgloss.Color("63")).
+			Align(lipgloss.Center)
 
 	timeStyle = lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("212")).
-		Align(lipgloss.Center).
-		MarginTop(1).
-		MarginBottom(1)
+			Bold(true).
+			Foreground(lipgloss.Color("212")).
+			Align(lipgloss.Center).
+			MarginTop(1).
+			MarginBottom(1)
 
 	doneStyle = lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color("42")).
-		Align(lipgloss.Center).
-		MarginBottom(1)
+			Bold(true).
+			Foreground(lipgloss.Color("42")).
+			Align(lipgloss.Center).
+			MarginBottom(1)
 
 	helpStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("244")).
-		Align(lipgloss.Center)
+			Foreground(lipgloss.Color("244")).
+			Align(lipgloss.Center)
 
 	confettiStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color("229")).
-		Align(lipgloss.Center).
-		MarginBottom(1)
+			Foreground(lipgloss.Color("229")).
+			Align(lipgloss.Center).
+			MarginBottom(1)
 )
 
 var confettiFrames = []string{
@@ -86,6 +88,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
+		return m, nil
+
 	case tickMsg:
 		if m.done {
 			return m, confettiTick()
@@ -113,14 +120,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) View() string {
 	if m.done {
-		return centerBlock(strings.Join([]string{
+		return m.placeContent(strings.Join([]string{
 			doneStyle.Render("Done!"),
 			confettiStyle.Render(confettiFrames[m.confettiFrame]),
 			helpStyle.Render("Press q, Esc or Ctrl+C to quit"),
 		}, "\n\n"))
 	}
 
-	return centerBlock(strings.Join([]string{
+	return m.placeContent(strings.Join([]string{
 		titleStyle.Render("COUNTDOWN"),
 		timeStyle.Render(FormatRemaining(m.remaining)),
 		helpStyle.Render("Press q, Esc or Ctrl+C to quit"),
@@ -139,6 +146,16 @@ func confettiTick() tea.Cmd {
 	})
 }
 
-func centerBlock(content string) string {
-	return "\n\n" + lipgloss.PlaceHorizontal(40, lipgloss.Center, content) + "\n"
+func (m model) placeContent(content string) string {
+	width := m.width
+	height := m.height
+
+	if width <= 0 {
+		width = 40
+	}
+	if height <= 0 {
+		return "\n\n" + lipgloss.PlaceHorizontal(width, lipgloss.Center, content) + "\n"
+	}
+
+	return lipgloss.Place(width, height, lipgloss.Center, lipgloss.Center, content)
 }

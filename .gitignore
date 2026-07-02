@@ -1,4 +1,5 @@
 # Binaries and build outputs
+/countdown
 /countdown-focus
 /test-countdown
 *.test
