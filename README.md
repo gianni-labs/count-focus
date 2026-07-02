@@ -36,6 +36,10 @@ count-focus 1h30m
 count-focus 1h30m10s
 ```
 
+## Licencia
+
+MIT
+
 ## Actualizar
 
 ```bash
