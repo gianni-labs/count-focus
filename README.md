@@ -2,6 +2,8 @@
 
 Timer de foco para la terminal.
 
+![Demo de Count Focus](docs/assets/count-focus-demo.gif)
+
 ## Instalación
 
 Con Homebrew:
