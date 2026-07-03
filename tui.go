@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -121,7 +122,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if remaining <= 0 {
 			m.remaining = 0
 			m.done = true
-			return m, confettiTick()
+			return m, tea.Batch(confettiTick(), bell())
 		}
 
 		m.remaining = remaining
@@ -232,6 +233,16 @@ func confettiTick() tea.Cmd {
 	return tea.Tick(confettiTickInterval, func(t time.Time) tea.Msg {
 		return confettiTickMsg(t)
 	})
+}
+
+// bell rings the terminal bell once the countdown finishes, so the user
+// notices even if they're not looking at the screen. The BEL control
+// character has no effect on cursor position or the alt-screen buffer.
+func bell() tea.Cmd {
+	return func() tea.Msg {
+		fmt.Print("\a")
+		return nil
+	}
 }
 
 func (m model) placeContent(content string) string {
