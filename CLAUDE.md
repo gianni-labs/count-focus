@@ -18,15 +18,18 @@ There is no separate lint config — `go vet` and `gofmt` are the baseline. Form
 
 Single-package Go CLI/TUI (`package main`, module `github.com/gianni-labs/count-focus`) built on Bubble Tea (`charmbracelet/bubbletea`) and Lip Gloss for styling. All files live at repo root, split by responsibility:
 
-- `main.go` — arg parsing entrypoint (`run`). Delegates to `ParseDuration` then `RunCountdown`.
+- `main.go` — arg parsing entrypoint (`run`). Handles `--help`/`-h` and `--version`/`-v`, then delegates to `ParseDuration` and `RunCountdown`. `version` is a package var overridable via `-ldflags -X main.version=...` (see Distribution below); local builds default to `"dev"`.
 - `duration.go` — `ParseDuration` parses strings like `1h30m10s` into `time.Duration`. Units must appear at most once, strictly in descending order (h, m, s); anything else is a validation error listed in `invalidDurationMessage`.
-- `tui.go` — the Bubble Tea `model` and `Update`/`View` loop. Countdown ticks every 200ms (`countdownTickInterval`); once `remaining <= 0`, `model.done` flips and a separate confetti animation ticks every 180ms cycling through `confettiFrames`. Quit keys: `q`, `esc`, `ctrl+c`.
+- `tui.go` — the Bubble Tea `model` and `Update`/`View` loop. Countdown ticks every 200ms (`countdownTickInterval`). Pause/resume (`Space`) works by tracking `elapsed` (accumulated running time) + `runningSince` (start of the current running segment) instead of a fixed start timestamp — see `model.togglePause`. Once `remaining <= 0`, `model.done` flips, the terminal bell rings once (`bell()`), and a separate confetti animation ticks every 180ms cycling through `confettiFrames`. Quit keys: `q`, `esc`, `ctrl+c`.
 - `format.go` — `FormatRemaining` renders a duration as `MM:SS` or `HH:MM:SS` (rounds up to the next whole second).
 - `bigtime.go` — ASCII-art "big digit" glyphs (`largeTimeGlyphs`) used to render the time large when the terminal is big enough; `tui.go`'s `canUseLargeTime` decides based on `m.width`/`m.height` whether to use `largeTimeStyle` (big glyphs) vs the normal `timeStyle`.
-- `duration_test.go`, `format_test.go` — table-driven tests for the two pure logic files above; the TUI itself has no tests (visual/interactive).
+- `progressbar.go` — `renderProgressBar` is a pure function producing `[████░░░░] 60%`; `tui.go`'s `canShowProgressBar`/`progressBarWidth` decide, based on terminal width, whether/how wide to render it (same width-gating pattern as `canUseLargeTime`).
+- `duration_test.go`, `format_test.go`, `progressbar_test.go` — table-driven tests for the pure logic files above.
+- `color_test.go` — regression test confirming Lip Gloss/termenv honor `NO_COLOR` (https://no-color.org/) out of the box; uses a fake `termenv.Environ` so it doesn't touch real process env vars.
+- The TUI's `Update`/`View` wiring itself has no tests (visual/interactive).
 
-Data flow: `main.run` → `ParseDuration` (string → `time.Duration`) → `RunCountdown` → `tea.NewProgram` with alt-screen → ticks drive `remaining` down → `FormatRemaining` for display, optionally upscaled via `renderLargeTime`.
+Data flow: `main.run` → `ParseDuration` (string → `time.Duration`) → `RunCountdown` → `tea.NewProgram` with alt-screen → ticks drive `remaining` down (unless paused) → `FormatRemaining` for display, optionally upscaled via `renderLargeTime`, plus `renderProgressBar` when there's room.
 
 ## Distribution
 
-Released via a Homebrew tap (`Formula/count-focus.rb`), built from a GitHub release tarball with `go build` — no other packaging or CI pipeline in this repo.
+Released via a Homebrew tap (`Formula/count-focus.rb`), built from a GitHub release tarball with `go build -ldflags "-s -w -X main.version=vX.Y.Z"`. CI (`.github/workflows/ci.yml`) runs `gofmt`/`go vet`/`go test`/`go build` on push to `main`/`dev` and on PRs. Full release checklist (tagging, computing the tarball sha256, updating the Formula) is in `docs/RELEASING.md` (local-only, gitignored like the rest of `docs/`).
