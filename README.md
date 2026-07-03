@@ -36,6 +36,49 @@ count-focus 1h30m
 count-focus 1h30m10s
 ```
 
+### Teclas
+
+Mientras corre el timer:
+
+- `Space` — pausar / reanudar
+- `q`, `Esc`, `Ctrl+C` — salir
+
+## Presets
+
+En vez de una duración, podés usar un preset con nombre:
+
+```bash
+count-focus --preset pomodoro     # 25m
+count-focus -p short-break        # 5m
+count-focus -p long-break         # 15m
+```
+
+> Nota: `pomodoro` acá es solo un atajo a una duración de 25 minutos, no el ciclo completo de trabajo/descanso.
+
+### Presets personalizados
+
+Podés definir tus propios presets (o cambiar los que vienen por defecto) creando este archivo:
+
+```
+~/.config/count-focus/presets.conf
+```
+
+Con una línea por preset, en formato `nombre = duración`:
+
+```conf
+pomodoro = 30m
+deep-work = 90m
+review = 45m
+```
+
+Los presets del archivo sobreescriben o extienden los built-in (`pomodoro`, `short-break`, `long-break`). Hay un ejemplo completo en [`examples/presets.conf`](examples/presets.conf).
+
+## Versión
+
+```bash
+count-focus --version
+```
+
 ## Licencia
 
 MIT
