@@ -1,8 +1,8 @@
 class CountFocus < Formula
   desc "Focus timer for the terminal"
   homepage "https://github.com/gianni-labs/count-focus"
-  url "https://github.com/gianni-labs/count-focus/archive/refs/tags/v0.1.1.tar.gz"
-  sha256 "22c6dc4c177826cb004cef3dc506bd273becc5f5810d1c0ce482d71ebaf59a10"
+  url "https://github.com/gianni-labs/count-focus/archive/refs/tags/v0.2.0.tar.gz"
+  sha256 "1f30e0a6cbb7b7c1b5c8ea382c9a0265f3b33c1fe2b5fe36c2b6dbdd2b6f833f"
   license "MIT"
 
   depends_on "go" => :build
