@@ -14,10 +14,18 @@ Examples:
   count-focus 1h30m
   count-focus 1h30m10s
 
+Flags:
+  --help, -h       Show this help
+  --version, -v    Show version
+
 Keys:
   Space            Pause/Resume
   q, Esc, Ctrl+C   Quit
 `
+
+// version is set at build time via -ldflags "-X main.version=...".
+// Homebrew installs set it to the release tag; local builds keep "dev".
+var version = "dev"
 
 func main() {
 	if err := run(os.Args[1:]); err != nil {
@@ -31,6 +39,11 @@ func main() {
 func run(args []string) error {
 	if len(args) == 1 && (args[0] == "--help" || args[0] == "-h") {
 		fmt.Print(helpText)
+		return nil
+	}
+
+	if len(args) == 1 && (args[0] == "--version" || args[0] == "-v") {
+		fmt.Println("count-focus " + version)
 		return nil
 	}
 

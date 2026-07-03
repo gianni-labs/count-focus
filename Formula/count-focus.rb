@@ -8,10 +8,11 @@ class CountFocus < Formula
   depends_on "go" => :build
 
   def install
-    system "go", "build", *std_go_args(ldflags: "-s -w")
+    system "go", "build", *std_go_args(ldflags: "-s -w -X main.version=v#{version}")
   end
 
   test do
     assert_match "count-focus <duration>", shell_output("#{bin}/count-focus --help")
+    assert_match "count-focus v#{version}", shell_output("#{bin}/count-focus --version")
   end
 end
