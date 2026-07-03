@@ -3,18 +3,26 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 )
 
 const helpText = `Usage:
   count-focus <duration>
+  count-focus --preset <name>
 
 Examples:
   count-focus 10s
   count-focus 5m
   count-focus 1h30m
   count-focus 1h30m10s
+  count-focus --preset pomodoro
+
+Presets:
+  Built-in: pomodoro (25m), short-break (5m), long-break (15m)
+  Custom:   ~/.config/count-focus/presets.conf ("name = duration" per line)
 
 Flags:
+  --preset, -p     Start a named preset
   --help, -h       Show this help
   --version, -v    Show version
 
@@ -47,17 +55,38 @@ func run(args []string) error {
 		return nil
 	}
 
-	if len(args) == 0 {
-		return fmt.Errorf("missing duration")
+	duration, err := parseArgs(args)
+	if err != nil {
+		return err
 	}
+
+	return RunCountdown(duration)
+}
+
+// parseArgs resolves the CLI arguments to a countdown duration, accepting
+// either a bare duration or a --preset/-p <name> pair.
+func parseArgs(args []string) (time.Duration, error) {
+	if len(args) == 0 {
+		return 0, fmt.Errorf("missing duration")
+	}
+
+	if args[0] == "--preset" || args[0] == "-p" {
+		if len(args) == 1 {
+			return 0, fmt.Errorf("missing preset name")
+		}
+		if len(args) > 2 {
+			return 0, fmt.Errorf("too many arguments")
+		}
+		return resolvePreset(args[1])
+	}
+
 	if len(args) > 1 {
-		return fmt.Errorf("too many arguments")
+		return 0, fmt.Errorf("too many arguments")
 	}
 
 	duration, err := ParseDuration(args[0])
 	if err != nil {
-		return fmt.Errorf("invalid duration: %s\n%s", args[0], invalidDurationMessage)
+		return 0, fmt.Errorf("invalid duration: %s\n%s", args[0], invalidDurationMessage)
 	}
-
-	return RunCountdown(duration)
+	return duration, nil
 }
