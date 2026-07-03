@@ -36,6 +36,26 @@ count-focus 1h30m
 count-focus 1h30m10s
 ```
 
+### Título
+
+Podés ponerle un título al timer para saber qué estás haciendo:
+
+```bash
+count-focus 25m --title "Escribir informe"
+count-focus 1h -t "Deep work"
+```
+
+### Hasta una hora específica
+
+En vez de una duración, podés apuntar a una hora del reloj (formato 24h). Cuenta regresiva hasta esa hora de hoy:
+
+```bash
+count-focus --until 15:00      # hasta las 15:00
+count-focus -u 15:30:30        # con segundos
+```
+
+Si la hora ya pasó hoy, muestra un error.
+
 ### Teclas
 
 Mientras corre el timer:

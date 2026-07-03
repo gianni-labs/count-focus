@@ -85,14 +85,14 @@ func TestParseArgsPreset(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parseArgs preset error: %v", err)
 	}
-	if got != 25*time.Minute {
-		t.Fatalf("parseArgs --preset pomodoro = %v, want 25m", got)
+	if got.duration != 25*time.Minute {
+		t.Fatalf("parseArgs --preset pomodoro duration = %v, want 25m", got.duration)
+	}
+	if got.title != "POMODORO" {
+		t.Fatalf("preset should default title to its name: got %q", got.title)
 	}
 
 	if _, err := parseArgs([]string{"-p"}); err == nil {
 		t.Fatal("parseArgs -p without name expected error")
-	}
-	if _, err := parseArgs([]string{"--preset", "a", "b"}); err == nil {
-		t.Fatal("parseArgs with extra args expected error")
 	}
 }

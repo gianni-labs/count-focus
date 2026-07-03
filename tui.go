@@ -18,6 +18,7 @@ type tickMsg time.Time
 type confettiTickMsg time.Time
 
 type model struct {
+	title         string
 	total         time.Duration
 	remaining     time.Duration
 	elapsed       time.Duration
@@ -77,14 +78,15 @@ var confettiFrames = []string{
 	"+   .   ✦   *   .   •\n  *   •   .   +   ✦\n.   ✦   +   .   *   .",
 }
 
-// RunCountdown starts the terminal UI for the given duration.
-func RunCountdown(duration time.Duration) error {
-	_, err := tea.NewProgram(newModel(duration), tea.WithAltScreen()).Run()
+// RunCountdown starts the terminal UI for the given duration and title.
+func RunCountdown(duration time.Duration, title string) error {
+	_, err := tea.NewProgram(newModel(duration, title), tea.WithAltScreen()).Run()
 	return err
 }
 
-func newModel(duration time.Duration) model {
+func newModel(duration time.Duration, title string) model {
 	return model{
+		title:        title,
 		total:        duration,
 		remaining:    duration,
 		runningSince: time.Now(),
@@ -167,7 +169,7 @@ func (m model) View() string {
 
 	remaining := FormatRemaining(m.remaining)
 	lines := []string{
-		titleStyle.Render("COUNT FOCUS"),
+		titleStyle.Render(m.title),
 		m.renderTime(remaining),
 	}
 
