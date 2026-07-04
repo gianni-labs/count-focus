@@ -29,6 +29,20 @@ func TestParseArgsDefaultTitle(t *testing.T) {
 	}
 }
 
+func TestParseArgsExec(t *testing.T) {
+	got, err := parseArgs([]string{"10s", "--exec", "say hi"})
+	if err != nil {
+		t.Fatalf("parseArgs error: %v", err)
+	}
+	if got.execCmd != "say hi" {
+		t.Errorf("execCmd = %q, want %q", got.execCmd, "say hi")
+	}
+
+	if _, err := parseArgs([]string{"10s", "--exec"}); err == nil {
+		t.Fatal("--exec without a value expected error")
+	}
+}
+
 func TestParseArgsCountUp(t *testing.T) {
 	// --up with no duration: stopwatch, no goal.
 	got, err := parseArgs([]string{"--up"})

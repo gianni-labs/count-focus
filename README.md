@@ -65,6 +65,21 @@ count-focus --up          # corre hasta que salgas
 count-focus --up 30m      # con meta: al pasar 30m avisa (suena y se pone verde), pero sigue contando
 ```
 
+### Ejecutar un comando al terminar
+
+Con `--exec` podés correr un comando de shell cuando el timer termina (o alcanza su meta en modo `--up`):
+
+```bash
+count-focus 25m --exec "open -a Slack"
+count-focus 10m --exec "say 'se acabó el tiempo'"    # voz en macOS
+```
+
+El comando se lanza sin bloquear la pantalla final. Sirve también para notificaciones nativas, por ejemplo en macOS:
+
+```bash
+count-focus 25m --exec 'osascript -e "display notification \"Listo\" with title \"count-focus\""'
+```
+
 ### Teclas
 
 Mientras corre el timer:

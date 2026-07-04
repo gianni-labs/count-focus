@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -20,6 +21,7 @@ type confettiTickMsg time.Time
 type model struct {
 	title   string
 	countUp bool
+	execCmd string // shell command to run when the timer ends / hits its goal
 	// display holds the time shown on screen: time remaining in countdown
 	// mode, or time elapsed in count-up mode.
 	display time.Duration
@@ -103,6 +105,7 @@ func newModel(opts options) model {
 	m := model{
 		title:        opts.title,
 		countUp:      opts.countUp,
+		execCmd:      opts.execCmd,
 		runningSince: time.Now(),
 	}
 	if opts.countUp {
@@ -146,7 +149,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.display = m.elapsedNow()
 			if m.target > 0 && !m.reachedGoal && m.display >= m.target {
 				m.reachedGoal = true
-				return m, tea.Batch(countdownTick(), bell())
+				return m, tea.Batch(countdownTick(), bell(), runExec(m.execCmd))
 			}
 			return m, countdownTick()
 		}
@@ -155,7 +158,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if remaining <= 0 {
 			m.display = 0
 			m.done = true
-			return m, tea.Batch(confettiTick(), bell())
+			return m, tea.Batch(confettiTick(), bell(), runExec(m.execCmd))
 		}
 
 		m.display = remaining
@@ -299,6 +302,23 @@ func confettiTick() tea.Cmd {
 func bell() tea.Cmd {
 	return func() tea.Msg {
 		fmt.Print("\a")
+		return nil
+	}
+}
+
+// runExec launches the user's --exec command via "sh -c" when the timer ends,
+// fire-and-forget so it never blocks the final screen. Returns nil (a no-op for
+// tea.Batch) when no command is set. Its stdio is left detached from the TUI's
+// alt-screen. A background Wait reaps the child so it doesn't linger.
+func runExec(command string) tea.Cmd {
+	if command == "" {
+		return nil
+	}
+	return func() tea.Msg {
+		c := exec.Command("sh", "-c", command)
+		if err := c.Start(); err == nil {
+			go c.Wait()
+		}
 		return nil
 	}
 }

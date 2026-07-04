@@ -23,6 +23,7 @@ Examples:
   count-focus --until 15:00
   count-focus --up
   count-focus --up 30m
+  count-focus 25m --exec "say 'time is up'"
 
 Presets:
   Built-in: pomodoro (25m), short-break (5m), long-break (15m)
@@ -30,6 +31,7 @@ Presets:
 
 Flags:
   --up             Count up (stopwatch); optional duration sets a goal
+  --exec, -e       Run a shell command when the timer ends (or hits its goal)
   --title, -t      Set the on-screen title
   --preset, -p     Start a named preset
   --until, -u      Count down until a wall-clock time today (HH:MM or HH:MM:SS)
@@ -79,6 +81,7 @@ type options struct {
 	countUp  bool
 	duration time.Duration
 	title    string
+	execCmd  string
 }
 
 // parseArgs resolves the CLI arguments. In countdown mode the length comes from
@@ -100,6 +103,12 @@ func parseArgs(args []string) (options, error) {
 		switch arg {
 		case "--up":
 			opts.countUp = true
+		case "--exec", "-e":
+			i++
+			if i >= len(args) {
+				return options{}, fmt.Errorf("missing value for %s", arg)
+			}
+			opts.execCmd = args[i]
 		case "--title", "-t":
 			i++
 			if i >= len(args) {
