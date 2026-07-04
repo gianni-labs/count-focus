@@ -56,6 +56,15 @@ count-focus -u 15:30:30        # con segundos
 
 Si la hora ya pasó hoy, muestra un error.
 
+### Cronómetro (contar hacia arriba)
+
+Con `--up` cuenta hacia arriba desde cero, como un cronómetro:
+
+```bash
+count-focus --up          # corre hasta que salgas
+count-focus --up 30m      # con meta: al pasar 30m avisa (suena y se pone verde), pero sigue contando
+```
+
 ### Teclas
 
 Mientras corre el timer:

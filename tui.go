@@ -18,16 +18,31 @@ type tickMsg time.Time
 type confettiTickMsg time.Time
 
 type model struct {
-	title         string
+	title   string
+	countUp bool
+	// display holds the time shown on screen: time remaining in countdown
+	// mode, or time elapsed in count-up mode.
+	display time.Duration
+	// total is the countdown length; target is the optional count-up goal
+	// (0 means no goal — count up forever).
 	total         time.Duration
-	remaining     time.Duration
+	target        time.Duration
 	elapsed       time.Duration
 	runningSince  time.Time
 	paused        bool
 	done          bool
+	reachedGoal   bool // count-up: the goal was crossed and the bell already rang
 	confettiFrame int
 	width         int
 	height        int
+}
+
+// elapsedNow returns the total elapsed running time, accounting for pauses.
+func (m model) elapsedNow() time.Duration {
+	if m.paused {
+		return m.elapsed
+	}
+	return m.elapsed + time.Since(m.runningSince)
 }
 
 var (
@@ -78,19 +93,26 @@ var confettiFrames = []string{
 	"+   .   ✦   *   .   •\n  *   •   .   +   ✦\n.   ✦   +   .   *   .",
 }
 
-// RunCountdown starts the terminal UI for the given duration and title.
-func RunCountdown(duration time.Duration, title string) error {
-	_, err := tea.NewProgram(newModel(duration, title), tea.WithAltScreen()).Run()
+// RunCountdown starts the terminal UI for the given options.
+func RunCountdown(opts options) error {
+	_, err := tea.NewProgram(newModel(opts), tea.WithAltScreen()).Run()
 	return err
 }
 
-func newModel(duration time.Duration, title string) model {
-	return model{
-		title:        title,
-		total:        duration,
-		remaining:    duration,
+func newModel(opts options) model {
+	m := model{
+		title:        opts.title,
+		countUp:      opts.countUp,
 		runningSince: time.Now(),
 	}
+	if opts.countUp {
+		m.target = opts.duration // 0 = count up with no goal
+		m.display = 0
+	} else {
+		m.total = opts.duration
+		m.display = opts.duration
+	}
+	return m
 }
 
 func (m model) Init() tea.Cmd {
@@ -120,14 +142,23 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 
-		remaining := m.total - m.elapsed - time.Since(m.runningSince)
+		if m.countUp {
+			m.display = m.elapsedNow()
+			if m.target > 0 && !m.reachedGoal && m.display >= m.target {
+				m.reachedGoal = true
+				return m, tea.Batch(countdownTick(), bell())
+			}
+			return m, countdownTick()
+		}
+
+		remaining := m.total - m.elapsedNow()
 		if remaining <= 0 {
-			m.remaining = 0
+			m.display = 0
 			m.done = true
 			return m, tea.Batch(confettiTick(), bell())
 		}
 
-		m.remaining = remaining
+		m.display = remaining
 		return m, countdownTick()
 
 	case confettiTickMsg:
@@ -140,8 +171,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-// togglePause pauses/resumes the countdown, preserving the exact remaining
-// time across the transition instead of relying on a fixed startedAt.
+// togglePause pauses/resumes the timer, preserving the exact elapsed time
+// across the transition instead of relying on a fixed start timestamp. Works
+// the same in countdown and count-up modes.
 func (m model) togglePause() (tea.Model, tea.Cmd) {
 	if m.done {
 		return m, nil
@@ -167,10 +199,10 @@ func (m model) View() string {
 		}, "\n\n"))
 	}
 
-	remaining := FormatRemaining(m.remaining)
+	shown := FormatRemaining(m.display)
 	lines := []string{
 		titleStyle.Render(m.title),
-		m.renderTime(remaining),
+		m.renderTime(shown),
 	}
 
 	if m.canShowProgressBar() {
@@ -189,15 +221,30 @@ func (m model) helpText() string {
 	return "Press Space to pause, q/Esc/Ctrl+C to quit"
 }
 
-// progress returns how much of the countdown has elapsed, in [0, 1].
+// progress returns how much of the timer has elapsed, in [0, 1]. In count-up
+// mode it measures progress toward the goal.
 func (m model) progress() float64 {
+	if m.countUp {
+		if m.target <= 0 {
+			return 0
+		}
+		p := float64(m.display) / float64(m.target)
+		if p > 1 {
+			return 1
+		}
+		return p
+	}
 	if m.total <= 0 {
 		return 1
 	}
-	return float64(m.total-m.remaining) / float64(m.total)
+	return float64(m.total-m.display) / float64(m.total)
 }
 
 func (m model) canShowProgressBar() bool {
+	// Count-up with no goal has no total to measure against.
+	if m.countUp && m.target <= 0 {
+		return false
+	}
 	return m.width >= progressBarMinWidth+16
 }
 
@@ -209,12 +256,21 @@ func (m model) progressBarWidth() int {
 	return width
 }
 
-func (m model) renderTime(remaining string) string {
-	if m.canUseLargeTime(remaining) {
-		return largeTimeStyle.Render(renderLargeTime(remaining))
+func (m model) renderTime(shown string) string {
+	// Once a count-up goal is reached, tint the time green as a signal.
+	large := m.canUseLargeTime(shown)
+	style := timeStyle
+	if large {
+		style = largeTimeStyle
+	}
+	if m.reachedGoal {
+		style = style.Foreground(lipgloss.Color("42"))
 	}
 
-	return timeStyle.Render(remaining)
+	if large {
+		return style.Render(renderLargeTime(shown))
+	}
+	return style.Render(shown)
 }
 
 func (m model) canUseLargeTime(remaining string) bool {

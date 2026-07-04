@@ -29,6 +29,29 @@ func TestParseArgsDefaultTitle(t *testing.T) {
 	}
 }
 
+func TestParseArgsCountUp(t *testing.T) {
+	// --up with no duration: stopwatch, no goal.
+	got, err := parseArgs([]string{"--up"})
+	if err != nil {
+		t.Fatalf("parseArgs(--up) error: %v", err)
+	}
+	if !got.countUp {
+		t.Error("expected countUp = true")
+	}
+	if got.duration != 0 {
+		t.Errorf("expected no goal, got duration %v", got.duration)
+	}
+
+	// --up with a duration: that's the goal.
+	got, err = parseArgs([]string{"--up", "30m"})
+	if err != nil {
+		t.Fatalf("parseArgs(--up 30m) error: %v", err)
+	}
+	if !got.countUp || got.duration != 30*time.Minute {
+		t.Errorf("expected count-up goal 30m, got countUp=%v duration=%v", got.countUp, got.duration)
+	}
+}
+
 func TestParseArgsErrors(t *testing.T) {
 	tests := []struct {
 		name string
@@ -41,6 +64,9 @@ func TestParseArgsErrors(t *testing.T) {
 		{"preset and until", []string{"--preset", "pomodoro", "--until", "15:00"}},
 		{"title without value", []string{"10s", "--title"}},
 		{"until without value", []string{"--until"}},
+		{"up with preset", []string{"--up", "--preset", "pomodoro"}},
+		{"up with until", []string{"--up", "--until", "15:00"}},
+		{"up with bad duration", []string{"--up", "nope"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

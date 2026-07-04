@@ -13,6 +13,7 @@ const helpText = `Usage:
   count-focus <duration>
   count-focus --preset <name>
   count-focus --until <HH:MM>
+  count-focus --up [duration]
 
 Examples:
   count-focus 10s
@@ -20,12 +21,15 @@ Examples:
   count-focus 25m --title "Deep work"
   count-focus --preset pomodoro
   count-focus --until 15:00
+  count-focus --up
+  count-focus --up 30m
 
 Presets:
   Built-in: pomodoro (25m), short-break (5m), long-break (15m)
   Custom:   ~/.config/count-focus/presets.conf ("name = duration" per line)
 
 Flags:
+  --up             Count up (stopwatch); optional duration sets a goal
   --title, -t      Set the on-screen title
   --preset, -p     Start a named preset
   --until, -u      Count down until a wall-clock time today (HH:MM or HH:MM:SS)
@@ -66,19 +70,22 @@ func run(args []string) error {
 		return err
 	}
 
-	return RunCountdown(opts.duration, opts.title)
+	return RunCountdown(opts)
 }
 
-// options holds the resolved CLI configuration for a run.
+// options holds the resolved CLI configuration for a run. In count-up mode,
+// duration is the optional goal (0 means count up with no goal).
 type options struct {
+	countUp  bool
 	duration time.Duration
 	title    string
 }
 
-// parseArgs resolves the CLI arguments. The countdown length comes from exactly
-// one of: a bare <duration>, --preset/-p <name>, or --until/-u <HH:MM>. An
-// optional --title/-t overrides the on-screen title (a preset defaults its
-// title to the preset name).
+// parseArgs resolves the CLI arguments. In countdown mode the length comes from
+// exactly one of: a bare <duration>, --preset/-p <name>, or --until/-u <HH:MM>.
+// With --up the timer counts up instead, and a bare <duration>, if given, is an
+// optional goal. An optional --title/-t overrides the on-screen title (a preset
+// defaults its title to the preset name).
 func parseArgs(args []string) (options, error) {
 	var (
 		opts        options
@@ -91,6 +98,8 @@ func parseArgs(args []string) (options, error) {
 	for i := 0; i < len(args); i++ {
 		arg := args[i]
 		switch arg {
+		case "--up":
+			opts.countUp = true
 		case "--title", "-t":
 			i++
 			if i >= len(args) {
@@ -119,6 +128,23 @@ func parseArgs(args []string) (options, error) {
 			}
 			durationArg = arg
 		}
+	}
+
+	if opts.countUp {
+		if presetArg != "" || untilArg != "" {
+			return options{}, fmt.Errorf("--up cannot be combined with --preset or --until")
+		}
+		if durationArg != "" {
+			d, err := ParseDuration(durationArg)
+			if err != nil {
+				return options{}, fmt.Errorf("invalid duration: %s\n%s", durationArg, invalidDurationMessage)
+			}
+			opts.duration = d // count-up goal
+		}
+		if opts.title == "" {
+			opts.title = defaultTitle
+		}
+		return opts, nil
 	}
 
 	sources := 0
