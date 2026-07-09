@@ -26,14 +26,14 @@ Examples:
   count-focus 25m --exec "say 'time is up'"
 
 Presets:
-  Built-in: pomodoro (25m), short-break (5m), long-break (15m)
+  Built-in: pomodoro (4 × 25m cycle), short-break (5m), long-break (15m)
   Custom:   ~/.config/count-focus/presets.conf ("name = duration" per line)
 
 Flags:
   --up             Count up (stopwatch); optional duration sets a goal
   --exec, -e       Run a shell command when the timer ends (or hits its goal)
   --title, -t      Set the on-screen title
-  --preset, -p     Start a named preset
+  --preset, -p     Start a named preset (pomodoro runs the full cycle)
   --until, -u      Count down until a wall-clock time today (HH:MM or HH:MM:SS)
   --help, -h       Show this help
   --version, -v    Show version
@@ -79,6 +79,7 @@ func run(args []string) error {
 // duration is the optional goal (0 means count up with no goal).
 type options struct {
 	countUp  bool
+	pomodoro bool
 	duration time.Duration
 	title    string
 	execCmd  string
@@ -177,6 +178,13 @@ func parseArgs(args []string) (options, error) {
 		}
 		opts.duration = d
 	case presetArg != "":
+		if presetArg == pomodoroPreset {
+			opts.pomodoro = true
+			if !titleSet {
+				opts.title = "POMODORO"
+			}
+			break
+		}
 		d, err := resolvePreset(presetArg)
 		if err != nil {
 			return options{}, err

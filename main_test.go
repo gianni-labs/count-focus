@@ -66,6 +66,22 @@ func TestParseArgsCountUp(t *testing.T) {
 	}
 }
 
+func TestParseArgsPomodoroPresetStartsCycle(t *testing.T) {
+	got, err := parseArgs([]string{"--preset", "pomodoro"})
+	if err != nil {
+		t.Fatalf("parseArgs error: %v", err)
+	}
+	if !got.pomodoro {
+		t.Error("expected pomodoro cycle")
+	}
+	if got.duration != 0 {
+		t.Errorf("duration = %v, want cycle-managed duration", got.duration)
+	}
+	if got.title != "POMODORO" {
+		t.Errorf("title = %q, want POMODORO", got.title)
+	}
+}
+
 func TestParseArgsErrors(t *testing.T) {
 	tests := []struct {
 		name string

@@ -30,7 +30,6 @@ func TestResolvePresetBuiltin(t *testing.T) {
 	writePresetConfig(t, "") // no config file, builtins only
 
 	tests := map[string]time.Duration{
-		"pomodoro":    25 * time.Minute,
 		"short-break": 5 * time.Minute,
 		"long-break":  15 * time.Minute,
 	}
@@ -53,21 +52,28 @@ func TestResolvePresetUnknown(t *testing.T) {
 }
 
 func TestPresetConfigOverridesAndExtends(t *testing.T) {
-	writePresetConfig(t, "# my presets\npomodoro = 30m\ndeep-work = 90m\n")
+	writePresetConfig(t, "# my presets\nshort-break = 10m\ndeep-work = 90m\n")
 
 	presets, err := loadPresets()
 	if err != nil {
 		t.Fatalf("loadPresets error: %v", err)
 	}
 
-	if presets["pomodoro"] != 30*time.Minute {
-		t.Errorf("config should override builtin pomodoro: got %v", presets["pomodoro"])
+	if presets["short-break"] != 10*time.Minute {
+		t.Errorf("config should override builtin short-break: got %v", presets["short-break"])
 	}
 	if presets["deep-work"] != 90*time.Minute {
 		t.Errorf("config should add deep-work: got %v", presets["deep-work"])
 	}
-	if presets["short-break"] != 5*time.Minute {
-		t.Errorf("untouched builtin should remain: got %v", presets["short-break"])
+	if presets["long-break"] != 15*time.Minute {
+		t.Errorf("untouched builtin should remain: got %v", presets["long-break"])
+	}
+}
+
+func TestPresetConfigRejectsReservedPomodoroName(t *testing.T) {
+	writePresetConfig(t, "pomodoro = 30m\n")
+	if _, err := loadPresets(); err == nil {
+		t.Fatal("loadPresets with reserved pomodoro expected error")
 	}
 }
 
@@ -85,8 +91,8 @@ func TestParseArgsPreset(t *testing.T) {
 	if err != nil {
 		t.Fatalf("parseArgs preset error: %v", err)
 	}
-	if got.duration != 25*time.Minute {
-		t.Fatalf("parseArgs --preset pomodoro duration = %v, want 25m", got.duration)
+	if !got.pomodoro {
+		t.Fatal("parseArgs --preset pomodoro should start the Pomodoro cycle")
 	}
 	if got.title != "POMODORO" {
 		t.Fatalf("preset should default title to its name: got %q", got.title)

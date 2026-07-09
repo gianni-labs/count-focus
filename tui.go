@@ -13,15 +13,27 @@ import (
 const (
 	countdownTickInterval = 200 * time.Millisecond
 	confettiTickInterval  = 180 * time.Millisecond
+	pomodoroFocusDuration = 25 * time.Minute
+	pomodoroShortBreak    = 5 * time.Minute
+	pomodoroLongBreak     = 15 * time.Minute
+	pomodoroRounds        = 4
 )
 
 type tickMsg time.Time
 type confettiTickMsg time.Time
 
+type pomodoroPhase int
+
+const (
+	pomodoroFocus pomodoroPhase = iota
+	pomodoroBreak
+)
+
 type model struct {
-	title   string
-	countUp bool
-	execCmd string // shell command to run when the timer ends / hits its goal
+	title    string
+	countUp  bool
+	pomodoro bool
+	execCmd  string // shell command to run when the timer ends / hits its goal
 	// display holds the time shown on screen: time remaining in countdown
 	// mode, or time elapsed in count-up mode.
 	display time.Duration
@@ -34,6 +46,8 @@ type model struct {
 	paused        bool
 	done          bool
 	reachedGoal   bool // count-up: the goal was crossed and the bell already rang
+	pomodoroRound int
+	pomodoroPhase pomodoroPhase
 	confettiFrame int
 	width         int
 	height        int
@@ -105,10 +119,15 @@ func newModel(opts options) model {
 	m := model{
 		title:        opts.title,
 		countUp:      opts.countUp,
+		pomodoro:     opts.pomodoro,
 		execCmd:      opts.execCmd,
 		runningSince: time.Now(),
 	}
-	if opts.countUp {
+	if opts.pomodoro {
+		m.pomodoroRound = 1
+		m.total = pomodoroFocusDuration
+		m.display = pomodoroFocusDuration
+	} else if opts.countUp {
 		m.target = opts.duration // 0 = count up with no goal
 		m.display = 0
 	} else {
@@ -156,6 +175,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		remaining := m.total - m.elapsedNow()
 		if remaining <= 0 {
+			if m.pomodoro {
+				return m.advancePomodoro()
+			}
 			m.display = 0
 			m.done = true
 			return m, tea.Batch(confettiTick(), bell(), runExec(m.execCmd))
@@ -172,6 +194,39 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	return m, nil
+}
+
+// advancePomodoro moves from focus to a break, or from a break to the next
+// focus round. The fourth focus round is followed by a long break; completing
+// that break ends the complete Pomodoro cycle.
+func (m model) advancePomodoro() (tea.Model, tea.Cmd) {
+	if m.pomodoroPhase == pomodoroFocus {
+		m.pomodoroPhase = pomodoroBreak
+		if m.pomodoroRound == pomodoroRounds {
+			m.startPomodoroPhase(pomodoroLongBreak)
+		} else {
+			m.startPomodoroPhase(pomodoroShortBreak)
+		}
+		return m, tea.Batch(countdownTick(), bell())
+	}
+
+	if m.pomodoroRound == pomodoroRounds {
+		m.display = 0
+		m.done = true
+		return m, tea.Batch(confettiTick(), bell(), runExec(m.execCmd))
+	}
+
+	m.pomodoroRound++
+	m.pomodoroPhase = pomodoroFocus
+	m.startPomodoroPhase(pomodoroFocusDuration)
+	return m, tea.Batch(countdownTick(), bell())
+}
+
+func (m *model) startPomodoroPhase(duration time.Duration) {
+	m.total = duration
+	m.display = duration
+	m.elapsed = 0
+	m.runningSince = time.Now()
 }
 
 // togglePause pauses/resumes the timer, preserving the exact elapsed time
@@ -207,6 +262,9 @@ func (m model) View() string {
 		titleStyle.Render(m.title),
 		m.renderTime(shown),
 	}
+	if m.pomodoro {
+		lines = append(lines, helpStyle.Render(m.pomodoroStatus()))
+	}
 
 	if m.canShowProgressBar() {
 		lines = append(lines, progressBarStyle.Render(renderProgressBar(m.progressBarWidth(), m.progress())))
@@ -215,6 +273,18 @@ func (m model) View() string {
 	lines = append(lines, helpStyle.Render(m.helpText()))
 
 	return m.placeContent(strings.Join(lines, "\n"))
+}
+
+func (m model) pomodoroStatus() string {
+	phase := "FOCUS"
+	if m.pomodoroPhase == pomodoroBreak {
+		if m.pomodoroRound == pomodoroRounds {
+			phase = "LONG BREAK"
+		} else {
+			phase = "SHORT BREAK"
+		}
+	}
+	return fmt.Sprintf("Round %d/%d — %s", m.pomodoroRound, pomodoroRounds, phase)
 }
 
 func (m model) helpText() string {
