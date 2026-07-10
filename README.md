@@ -56,6 +56,30 @@ count-focus -u 15:30:30        # con segundos
 
 Si la hora ya pasó hoy, muestra un error.
 
+### Cronómetro (contar hacia arriba)
+
+Con `--up` cuenta hacia arriba desde cero, como un cronómetro:
+
+```bash
+count-focus --up          # corre hasta que salgas
+count-focus --up 30m      # con meta: al pasar 30m avisa (suena y se pone verde), pero sigue contando
+```
+
+### Ejecutar un comando al terminar
+
+Con `--exec` podés correr un comando de shell cuando el timer termina (o alcanza su meta en modo `--up`):
+
+```bash
+count-focus 25m --exec "open -a Slack"
+count-focus 10m --exec "say 'se acabó el tiempo'"    # voz en macOS
+```
+
+El comando se lanza sin bloquear la pantalla final. Sirve también para notificaciones nativas, por ejemplo en macOS:
+
+```bash
+count-focus 25m --exec 'osascript -e "display notification \"Listo\" with title \"count-focus\""'
+```
+
 ### Teclas
 
 Mientras corre el timer:
@@ -68,12 +92,12 @@ Mientras corre el timer:
 En vez de una duración, podés usar un preset con nombre:
 
 ```bash
-count-focus --preset pomodoro     # 25m
+count-focus --preset pomodoro     # ciclo completo: 4 × 25m, descansos de 5m y uno final de 15m
 count-focus -p short-break        # 5m
 count-focus -p long-break         # 15m
 ```
 
-> Nota: `pomodoro` acá es solo un atajo a una duración de 25 minutos, no el ciclo completo de trabajo/descanso.
+`pomodoro` inicia el ciclo estándar completo: cuatro rondas de foco de 25 minutos, descansos cortos de 5 minutos entre rondas y un descanso largo de 15 minutos al final. La pantalla indica la ronda y la fase actual; el bell suena al cambiar de fase. `--exec`, si se indica, se ejecuta al terminar el ciclo completo.
 
 ### Presets personalizados
 
@@ -86,12 +110,12 @@ Podés definir tus propios presets (o cambiar los que vienen por defecto) creand
 Con una línea por preset, en formato `nombre = duración`:
 
 ```conf
-pomodoro = 30m
+short-break = 10m
 deep-work = 90m
 review = 45m
 ```
 
-Los presets del archivo sobreescriben o extienden los built-in (`pomodoro`, `short-break`, `long-break`). Hay un ejemplo completo en [`examples/presets.conf`](examples/presets.conf).
+Los presets del archivo sobreescriben o extienden los built-in (`short-break`, `long-break`). `pomodoro` está reservado para el ciclo estándar completo. Hay un ejemplo completo en [`examples/presets.conf`](examples/presets.conf).
 
 ## Versión
 

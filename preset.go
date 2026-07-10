@@ -11,10 +11,12 @@ import (
 	"time"
 )
 
+const pomodoroPreset = "pomodoro"
+
 // builtinPresets are always available, even without a config file. A user
-// config file can override any of these or add new ones.
+// config file can override any of these or add new ones. pomodoro is excluded:
+// it is the reserved name for the built-in multi-phase Pomodoro cycle.
 var builtinPresets = map[string]time.Duration{
-	"pomodoro":    25 * time.Minute,
 	"short-break": 5 * time.Minute,
 	"long-break":  15 * time.Minute,
 }
@@ -86,6 +88,9 @@ func loadPresets() (map[string]time.Duration, error) {
 		value = strings.TrimSpace(value)
 		if name == "" {
 			return nil, fmt.Errorf("%s:%d: empty preset name", path, lineNo)
+		}
+		if name == pomodoroPreset {
+			return nil, fmt.Errorf("%s:%d: preset %q is reserved for the built-in Pomodoro cycle", path, lineNo, name)
 		}
 
 		d, err := ParseDuration(value)
