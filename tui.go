@@ -17,6 +17,7 @@ const (
 	pomodoroShortBreak    = 5 * time.Minute
 	pomodoroLongBreak     = 15 * time.Minute
 	pomodoroRounds        = 4
+	primaryColor          = "#C0CAF5"
 )
 
 type tickMsg time.Time
@@ -69,14 +70,14 @@ var (
 
 	timeStyle = lipgloss.NewStyle().
 			Bold(true).
-			Foreground(lipgloss.Color("212")).
+			Foreground(lipgloss.Color(primaryColor)).
 			Align(lipgloss.Center).
 			MarginTop(1).
 			MarginBottom(1)
 
 	largeTimeStyle = lipgloss.NewStyle().
 			Bold(true).
-			Foreground(lipgloss.Color("212")).
+			Foreground(lipgloss.Color(primaryColor)).
 			Align(lipgloss.Center).
 			MarginTop(1).
 			MarginBottom(1)
@@ -92,7 +93,7 @@ var (
 			Align(lipgloss.Center)
 
 	progressBarStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color("212")).
+				Foreground(lipgloss.Color(primaryColor)).
 				Align(lipgloss.Center).
 				MarginBottom(1)
 
