@@ -125,6 +125,10 @@ Los presets del archivo sobreescriben o extienden los built-in `short-break` y `
 count-focus --version
 ```
 
+## Changelog
+
+Consultá [CHANGELOG.md](CHANGELOG.md) para ver los cambios relevantes de cada versión.
+
 ## Licencia
 
 MIT

@@ -125,6 +125,10 @@ Custom presets override or extend the built-in `short-break` and `long-break` pr
 count-focus --version
 ```
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for notable changes in each release.
+
 ## License
 
 MIT
