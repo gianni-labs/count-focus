@@ -20,3 +20,7 @@ coverage.html
 
 # Logs
 *.log
+
+# Local demo assets
+/assets/count-focus-demo-original.gif
+/assets/count-focus-demo-pomodoro.tape
