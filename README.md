@@ -1,6 +1,10 @@
 # Count Focus
 
-A focused, terminal-native timer for deep work.
+Count Focus is a terminal-native focus timer for developers who live in the command line.
+
+Start deep work in seconds without an account or context switch; pause, personalize, and automate the finish.
+
+Install with Homebrew: `brew tap gianni-labs/tap && brew trust --formula gianni-labs/tap/count-focus && brew install count-focus`.
 
 [Español](README.es.md)
 

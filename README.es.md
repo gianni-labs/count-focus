@@ -1,6 +1,10 @@
 # Count Focus
 
-Timer de foco para la terminal.
+Count Focus es un timer de foco nativo de terminal para developers que viven en la línea de comandos.
+
+Empezá trabajo profundo en segundos, sin cuenta ni cambio de contexto; pausá, personalizá y automatizá el final.
+
+Instalalo con Homebrew: `brew tap gianni-labs/tap && brew trust --formula gianni-labs/tap/count-focus && brew install count-focus`.
 
 [English](README.md)
 
